@@ -1,0 +1,12 @@
+[package]
+name = "devbot"
+version = "0.1.0"
+authors = ["MrDogeBro <MrDogeBro@users.noreply.github.com>"]
+edition = "2018"
+
+[dependencies]
+tokio = { version = "1", features = ["full"] }
+poise = { git = "https://github.com/kangalioo/poise" }
+anyhow = "1.0"
+serde_json = "1"
+dotenv = "0.15.0"
