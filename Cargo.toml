@@ -14,3 +14,7 @@ dotenv = "0.15.0"
 #git = "https://github.com/kangalioo/poise"
 git = "https://github.com/vicky5124/poise"
 branch = "components_pls"
+
+[dependencies.uuid]
+version = "0.8"
+features = ["v4"]
