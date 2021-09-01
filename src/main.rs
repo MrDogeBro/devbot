@@ -128,7 +128,7 @@ async fn main() -> Result<()> {
     let env = Env::load()?;
 
     let framework = poise::Framework::new(
-        ">".to_owned(), // prefix
+        env.prefix.to_owned(),
         ApplicationId(env.application_id),
         |_, _, _| Box::pin(State::load()),
         init_framework()?,
