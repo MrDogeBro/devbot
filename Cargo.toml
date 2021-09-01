@@ -15,6 +15,12 @@ dotenv = "0.15.0"
 git = "https://github.com/vicky5124/poise"
 branch = "components_pls"
 
+[dependencies.serenity]
+default-features = false
+features = ["builder", "cache", "client", "gateway", "model", "utils", "rustls_backend", "unstable_discord_api", "collector"]
+git = "https://github.com/serenity-rs/serenity"
+branch = "next"
+
 [dependencies.uuid]
 version = "0.8"
 features = ["v4"]

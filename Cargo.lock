@@ -191,6 +191,7 @@ dependencies = [
  "dotenv",
  "poise",
  "serde_json",
+ "serenity",
  "tokio",
  "uuid",
 ]
