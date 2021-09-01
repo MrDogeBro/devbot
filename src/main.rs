@@ -3,9 +3,12 @@ mod config;
 
 use anyhow::{Error, Result};
 use config::{Config, Env};
-use poise::serenity::{model::id::ChannelId, prelude::Context as SerenityContext};
-use poise::serenity_prelude as serenity;
 use serde_json;
+use serenity::{
+    builder::CreateApplicationCommands,
+    model::{id::ChannelId, prelude::ApplicationId},
+    prelude::Context as SerenityContext,
+};
 use std::time::Duration;
 
 pub type Context<'a> = poise::Context<'a, State, Error>;
@@ -51,7 +54,7 @@ async fn listener(
 
                 println!("Commands unregistered (develop)");
 
-                let mut commands_builder = serenity::CreateApplicationCommands::default();
+                let mut commands_builder = CreateApplicationCommands::default();
                 let commands = &framework.options().slash_options.commands;
 
                 for cmd in commands {
@@ -74,7 +77,7 @@ async fn listener(
 
                 println!("Commands unregistered");
 
-                let mut commands_builder = serenity::CreateApplicationCommands::default();
+                let mut commands_builder = CreateApplicationCommands::default();
                 let commands = &framework.options().slash_options.commands;
 
                 for cmd in commands {
@@ -126,12 +129,12 @@ async fn main() -> Result<()> {
 
     let framework = poise::Framework::new(
         ">".to_owned(), // prefix
-        serenity::ApplicationId(env.application_id),
+        ApplicationId(env.application_id),
         |_, _, _| Box::pin(State::load()),
         init_framework()?,
     );
     framework
-        .start(serenity::ClientBuilder::new(env.token))
+        .start(serenity::client::ClientBuilder::new(env.token))
         .await?;
 
     Ok(())
