@@ -12,3 +12,10 @@ pub fn command_list(
 
     Ok(options)
 }
+
+pub fn get_category_description(category: &str) -> &str {
+    match category {
+        "Meta" => "Information about the bot",
+        _ => "???",
+    }
+}
