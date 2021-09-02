@@ -49,6 +49,11 @@ pub async fn help(ctx: Context<'_>) -> Result<()> {
         }
     }
 
+    let prefix = match ctx {
+        poise::Context::Prefix(_) => ctx.data().config.env.prefix.to_owned(),
+        _ => "/".to_string(),
+    };
+
     poise::send_reply(ctx, |m| {
         m.embed(|embed| {
             embed.title("Help");
@@ -118,13 +123,12 @@ pub async fn help(ctx: Context<'_>) -> Result<()> {
                         }
 
                         cmds += format!(
-                            "`{}` {}\n",
+                            "`{}{}` {}\n",
+                            prefix,
                             command.name,
                             command.options.inline_help.unwrap_or("")
                         )
                         .as_str();
-
-                        // println!("{}", ctx.prefix);
                     }
 
                     msg.edit(ctx.discord(), |m| {
