@@ -1,6 +1,7 @@
 use anyhow::Result;
 use dotenv::dotenv;
 use std::env::var;
+use std::time::Duration;
 
 #[derive(Clone)]
 pub struct Config {
@@ -14,6 +15,7 @@ pub struct Env {
     pub application_id: u64,
     pub prefix: String,
     pub default_embed_color: serenity::utils::Colour,
+    pub default_interaction_timeout: Duration,
     pub test_server_id: u64,
 }
 
@@ -46,6 +48,9 @@ impl Env {
                 *default_embed_color.get(0).unwrap(),
                 *default_embed_color.get(2).unwrap(),
                 *default_embed_color.get(2).unwrap(),
+            ),
+            default_interaction_timeout: Duration::from_secs(
+                var("DEFAULT_INTERACTION_TIMEOUT")?.parse()?,
             ),
             test_server_id: var("TEST_SERVER_ID")?.parse()?,
         })
