@@ -3,7 +3,6 @@ use anyhow::Result;
 use chrono::prelude::Utc;
 use serenity::collector::component_interaction_collector::CollectComponentInteraction;
 use serenity::model::prelude::InteractionResponseType;
-use std::time::Duration;
 use uuid::Uuid;
 
 // ========================================================================================
@@ -103,7 +102,7 @@ pub async fn help(ctx: Context<'_>) -> Result<()> {
         let mci = CollectComponentInteraction::new(ctx.discord())
             .author_id(ctx.author().id)
             .channel_id(ctx.channel_id())
-            .timeout(Duration::from_secs(10))
+            .timeout(ctx.data().config.env.default_interaction_timeout)
             .filter(move |mci| mci.data.custom_id == mov_uuid_categories.to_string())
             .await;
 
@@ -177,7 +176,7 @@ pub async fn help(ctx: Context<'_>) -> Result<()> {
                         embed.color(ctx.data().config.env.default_embed_color);
                         embed.footer(|f| {
                             f.text(format!(
-                                "Interaction timed out at {} UTC.",
+                                "Interaction timed out at {} UTC",
                                 Utc::now().format("%Y-%m-%d %H:%M:%S")
                             ));
                             f
