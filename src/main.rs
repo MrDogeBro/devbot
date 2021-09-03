@@ -1,12 +1,11 @@
 mod commands;
 mod config;
+mod hub;
 
 use anyhow::{Error, Result};
-use config::{Config, Env};
 use serde_json;
 use serenity::{
-    builder::CreateApplicationCommands,
-    model::{id::ChannelId, prelude::ApplicationId},
+    builder::CreateApplicationCommands, model::prelude::ApplicationId,
     prelude::Context as SerenityContext,
 };
 use std::time::Duration;
@@ -15,13 +14,17 @@ pub type Context<'a> = poise::Context<'a, State, Error>;
 pub type PrefixContext<'a> = poise::PrefixContext<'a, State, Error>;
 
 pub struct State {
-    config: Config,
+    config: config::Config,
+    hub: hub::Hub,
 }
 
 impl State {
     pub async fn load() -> Result<Self> {
+        let config = config::Config::load()?;
+
         Ok(Self {
-            config: Config::load()?,
+            hub: hub::Hub::load(&config)?,
+            config,
         })
     }
 }
@@ -35,20 +38,25 @@ async fn listener(
     match event {
         poise::Event::Ready { .. } => {
             println!("Bot is connected!");
-            ChannelId(419509247970377740)
-                .send_message(&ctx.http, |m| m.content("testing 123"))
+
+            state
+                .hub
+                .stdout
+                .send_message(&ctx.http, |m| {
+                    m.content(format!("DevBot v{} started.", env!("CARGO_PKG_VERSION")))
+                })
                 .await?;
 
             if cfg!(debug_assertions) {
                 // register only for test guild in develop
                 let commands = ctx
                     .http
-                    .get_guild_application_commands(state.config.env.test_server_id)
+                    .get_guild_application_commands(state.config.env.hub_server_id)
                     .await?;
 
                 for cmd in commands {
                     ctx.http
-                        .delete_guild_application_command(state.config.env.test_server_id, cmd.id.0)
+                        .delete_guild_application_command(state.config.env.hub_server_id, cmd.id.0)
                         .await?;
                 }
 
@@ -63,7 +71,7 @@ async fn listener(
 
                 let json_value = serde_json::Value::Array(commands_builder.0);
                 ctx.http
-                    .create_guild_application_commands(state.config.env.test_server_id, &json_value)
+                    .create_guild_application_commands(state.config.env.hub_server_id, &json_value)
                     .await?;
 
                 println!("Commands registered (develop)");
@@ -125,7 +133,7 @@ fn init_framework() -> Result<poise::FrameworkOptions<State, Error>> {
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let env = Env::load()?;
+    let env = config::Env::load()?;
 
     let framework = poise::Framework::new(
         env.prefix.to_owned(),
