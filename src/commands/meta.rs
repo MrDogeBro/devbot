@@ -1,5 +1,6 @@
 use super::{get_category_description, Context};
 use anyhow::Result;
+use chrono::prelude::Utc;
 use serenity::collector::component_interaction_collector::CollectComponentInteraction;
 use serenity::model::prelude::InteractionResponseType;
 use std::time::Duration;
@@ -54,7 +55,7 @@ pub async fn help(ctx: Context<'_>) -> Result<()> {
         _ => "/".to_string(),
     };
 
-    poise::send_reply(ctx, |m| {
+    let reply = poise::send_reply(ctx, |m| {
         m.embed(|embed| {
             embed.title("Help");
             embed.description("Get started by selecting a category from the select menu below");
@@ -90,14 +91,19 @@ pub async fn help(ctx: Context<'_>) -> Result<()> {
         });
         m
     })
+    .await?
+    .message()
     .await?;
+
+    let reply_channel_id = reply.channel_id;
+    let reply_id = reply.id;
 
     loop {
         let mov_uuid_categories = uuid_categories.clone();
         let mci = CollectComponentInteraction::new(ctx.discord())
             .author_id(ctx.author().id)
             .channel_id(ctx.channel_id())
-            .timeout(Duration::from_secs(120))
+            .timeout(Duration::from_secs(10))
             .filter(move |mci| mci.data.custom_id == mov_uuid_categories.to_string())
             .await;
 
@@ -152,7 +158,43 @@ pub async fn help(ctx: Context<'_>) -> Result<()> {
             })
             .await?;
         } else {
-            println!("Collector returned None, returning.");
+            let mut msg = ctx
+                .discord()
+                .http
+                .get_message(*reply_channel_id.as_u64(), *reply_id.as_u64())
+                .await?;
+
+            let msg_clone = msg.clone();
+            let curr_embed = msg_clone.embeds.get(0);
+
+            msg.edit(ctx.discord(), |m| {
+                m.components(|c| c);
+
+                if let Some(curr) = curr_embed {
+                    m.embed(|embed| {
+                        embed.title(curr.title.as_ref().unwrap());
+                        embed.description(curr.description.as_ref().unwrap());
+                        embed.color(ctx.data().config.env.default_embed_color);
+                        embed.footer(|f| {
+                            f.text(format!(
+                                "Interaction timed out at {} UTC.",
+                                Utc::now().format("%Y-%m-%d %H:%M:%S")
+                            ));
+                            f
+                        });
+
+                        for field in curr.fields.clone() {
+                            embed.field(field.name, field.value, field.inline);
+                        }
+
+                        embed
+                    });
+                }
+
+                m
+            })
+            .await?;
+
             break;
         }
     }
