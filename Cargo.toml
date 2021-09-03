@@ -1,6 +1,6 @@
 [package]
 name = "devbot"
-version = "2.0.0"
+version = "2.0.0-alpha.0"
 authors = ["MrDogeBro <MrDogeBro@users.noreply.github.com>"]
 edition = "2018"
 
