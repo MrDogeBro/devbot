@@ -188,6 +188,7 @@ name = "devbot"
 version = "2.0.0"
 dependencies = [
  "anyhow",
+ "chrono",
  "dotenv",
  "poise",
  "serde_json",
