@@ -16,7 +16,8 @@ pub struct Env {
     pub prefix: String,
     pub default_embed_color: serenity::utils::Colour,
     pub default_interaction_timeout: Duration,
-    pub test_server_id: u64,
+    pub hub_server_id: u64,
+    pub hub_stdout_id: u64,
 }
 
 impl Config {
@@ -52,7 +53,8 @@ impl Env {
             default_interaction_timeout: Duration::from_secs(
                 var("DEFAULT_INTERACTION_TIMEOUT")?.parse()?,
             ),
-            test_server_id: var("TEST_SERVER_ID")?.parse()?,
+            hub_server_id: var("HUB_SERVER_ID")?.parse()?,
+            hub_stdout_id: var("HUB_STDOUT_ID")?.parse()?,
         })
     }
 }
