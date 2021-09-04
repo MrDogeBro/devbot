@@ -1,8 +1,10 @@
 mod commands;
 mod config;
 mod hub;
+mod utils;
 
 use anyhow::{Error, Result};
+use chrono::{prelude::Utc, DateTime};
 use serde_json;
 use serenity::{
     builder::CreateApplicationCommands, model::prelude::ApplicationId,
@@ -16,6 +18,7 @@ pub type PrefixContext<'a> = poise::PrefixContext<'a, State, Error>;
 pub struct State {
     config: config::Config,
     hub: hub::Hub,
+    start_time: DateTime<Utc>,
 }
 
 impl State {
@@ -25,6 +28,7 @@ impl State {
         Ok(Self {
             hub: hub::Hub::load(&config)?,
             config,
+            start_time: Utc::now(),
         })
     }
 }
