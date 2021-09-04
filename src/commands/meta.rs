@@ -1,8 +1,12 @@
 use super::{get_category_description, Context};
 use anyhow::Result;
 use chrono::prelude::Utc;
+use regex::Regex;
 use serenity::collector::component_interaction_collector::CollectComponentInteraction;
 use serenity::model::prelude::InteractionResponseType;
+use std::fs;
+use std::process::Command;
+use toml::Value;
 use uuid::Uuid;
 
 // ========================================================================================
@@ -14,7 +18,43 @@ use uuid::Uuid;
 /// Shows information about the bot, its code, etc.
 #[poise::command(slash_command)]
 pub async fn info(ctx: Context<'_>) -> Result<()> {
-    poise::send_reply(ctx, |m| m.embed(|e| e.description("testing"))).await?;
+    let cargo_file = fs::read_to_string("Cargo.toml")?.parse::<Value>()?;
+    let serenity_depend = &cargo_file["dependencies"]["serenity"].as_table().unwrap();
+    let cargo_cmd = Command::new("cargo").arg("-V").output()?;
+    let cargo_version_raw = &String::from_utf8_lossy(&cargo_cmd.stdout);
+    let cargo_version = Regex::new(r"([0-9]+(\.[0-9]+)+)")?
+        .find(cargo_version_raw)
+        .unwrap()
+        .as_str();
+
+    let serenity_version = if serenity_depend.contains_key("git") {
+        if serenity_depend.contains_key("branch") {
+            format!(
+                "git/{}",
+                serenity_depend["branch"].as_str().unwrap_or("???")
+            )
+        } else {
+            "git".to_string()
+        }
+    } else {
+        serenity_depend["version"]
+            .as_str()
+            .unwrap_or("???")
+            .to_string()
+    };
+
+    poise::send_reply(ctx, |m| {
+        m.embed(|e| {
+            e.title("Information");
+            e.color(ctx.data().config.env.default_embed_color);
+            e.field("Bot Version", env!("CARGO_PKG_VERSION"), true);
+            e.field("Rust Version", cargo_version, true);
+            e.field("Serenity Version", serenity_version, true);
+
+            e
+        })
+    })
+    .await?;
 
     Ok(())
 }
