@@ -1,4 +1,4 @@
-use super::{get_category_description, Context};
+use super::{get_category_description, utils, Context};
 use anyhow::Result;
 use chrono::prelude::Utc;
 use regex::Regex;
@@ -26,6 +26,7 @@ pub async fn info(ctx: Context<'_>) -> Result<()> {
         .find(cargo_version_raw)
         .unwrap()
         .as_str();
+    let uptime = utils::chron::time_diff(ctx.data().start_time, Utc::now())?;
 
     let serenity_version = if serenity_depend.contains_key("git") {
         if serenity_depend.contains_key("branch") {
@@ -50,6 +51,13 @@ pub async fn info(ctx: Context<'_>) -> Result<()> {
             e.field("Bot Version", env!("CARGO_PKG_VERSION"), true);
             e.field("Rust Version", cargo_version, true);
             e.field("Serenity Version", serenity_version, true);
+            e.field("Uptime", uptime, true);
+            e.field("Guild Count", ctx.discord().cache.guild_count(), true);
+            e.field(
+                "Owner",
+                format!("<@{}>", &ctx.data().config.env.owner_id),
+                true,
+            );
 
             e
         })
@@ -58,10 +66,6 @@ pub async fn info(ctx: Context<'_>) -> Result<()> {
 
     Ok(())
 }
-
-// for guild in ctx.discord().cache.guilds() {
-// println!("{}", guild);
-// }
 
 // ========================================================================================
 //                                  Help Command
