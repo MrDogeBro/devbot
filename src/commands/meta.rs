@@ -15,7 +15,9 @@ use uuid::Uuid;
 
 /// Shows information about the bot
 ///
-/// Shows information about the bot, its code, etc.
+/// Shows information about the bot, its code, etc. ```
+/// <<prefix>>info
+/// ```
 #[poise::command(slash_command)]
 pub async fn info(ctx: Context<'_>) -> Result<()> {
     let cargo_file = fs::read_to_string("Cargo.toml")?.parse::<Value>()?;
@@ -73,12 +75,14 @@ pub async fn info(ctx: Context<'_>) -> Result<()> {
 
 /// Shows all of the bots commands
 ///
-/// Shows the commands the bot has. To get detailed information about a specific command,
-/// use the following syntax. ```
-/// /help <command>
+/// Shows the commands the bot has. Optionally, to get detailed information about a specific command, use the following syntax. ```
+/// <<prefix>>help [command|module]
 /// ```
 #[poise::command(slash_command)]
-pub async fn help(ctx: Context<'_>) -> Result<()> {
+pub async fn help(
+    ctx: Context<'_>,
+    #[description = "The category or command you want help on"] query: Option<String>,
+) -> Result<()> {
     let uuid_categories = Uuid::new_v4();
     let mut categories: Vec<(Option<&str>, Vec<&poise::PrefixCommand<_, _>>)> = Vec::new();
 
@@ -98,6 +102,72 @@ pub async fn help(ctx: Context<'_>) -> Result<()> {
         _ => "/".to_string(),
     };
 
+    if let Some(query) = query {
+        for (category_name, commands) in &categories {
+            let category = category_name.unwrap_or("Other");
+            let mut cmds: String = "".to_string();
+
+            if query.to_lowercase() == category.to_lowercase() {
+                for command in commands {
+                    if command.options.hide_in_help {
+                        continue;
+                    }
+
+                    cmds += format!(
+                        "`{}{}` {}\n",
+                        prefix,
+                        command.name,
+                        command.options.inline_help.unwrap_or("")
+                    )
+                    .as_str();
+                }
+
+                poise::send_reply(ctx, |m| {
+                    m.embed(|embed| {
+                        embed.title(category);
+                        embed.description(get_category_description(category));
+                        embed.color(ctx.data().config.env.default_embed_color);
+
+                        embed.field("Commands", cmds, false);
+                        embed
+                    });
+                    m
+                })
+                .await?;
+
+                return Ok(());
+            }
+            for command in commands {
+                if query.to_lowercase() == command.name.to_lowercase() {
+                    if command.options.hide_in_help {
+                        continue;
+                    }
+
+                    let name: String = utils::string::into_titlecase(&mut command.name.to_owned())?;
+                    let description: String =
+                        if let Some(multiline_help) = command.options.multiline_help {
+                            multiline_help()
+                        } else {
+                            command.options.inline_help.unwrap_or("").to_string()
+                        };
+
+                    poise::send_reply(ctx, |m| {
+                        m.embed(|embed| {
+                            embed.title(name);
+                            embed.description(description.replace("<<prefix>>", &prefix));
+                            embed.color(ctx.data().config.env.default_embed_color);
+
+                            embed
+                        });
+                        m
+                    })
+                    .await?;
+
+                    return Ok(());
+                }
+            }
+        }
+    }
     let reply = poise::send_reply(ctx, |m| {
         m.embed(|embed| {
             embed.title("Help");
