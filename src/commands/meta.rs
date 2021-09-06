@@ -3,7 +3,9 @@ use anyhow::Result;
 use chrono::prelude::Utc;
 use regex::Regex;
 use serenity::collector::component_interaction_collector::CollectComponentInteraction;
-use serenity::model::prelude::InteractionResponseType;
+use serenity::model::{
+    interactions::message_component::ButtonStyle, prelude::InteractionResponseType,
+};
 use std::fs;
 use std::process::Command;
 use toml::Value;
@@ -15,7 +17,7 @@ use uuid::Uuid;
 
 /// Shows information about the bot
 ///
-/// Shows information about the bot, its code, etc. ```
+/// Shows information about the bot, inviting it, etc. ```
 /// <<prefix>>info
 /// ```
 #[poise::command(slash_command)]
@@ -47,22 +49,43 @@ pub async fn info(ctx: Context<'_>) -> Result<()> {
     };
 
     poise::send_reply(ctx, |m| {
-        m.embed(|e| {
-            e.title("Information");
-            e.color(ctx.data().config.env.default_embed_color);
-            e.field("Bot Version", env!("CARGO_PKG_VERSION"), true);
-            e.field("Rust Version", cargo_version, true);
-            e.field("Serenity Version", serenity_version, true);
-            e.field("Uptime", uptime, true);
-            e.field("Guild Count", ctx.discord().cache.guild_count(), true);
-            e.field(
+        m.embed(|embed| {
+            embed.title("Information");
+            embed.color(ctx.data().config.env.default_embed_color);
+            embed.field("Bot Version", env!("CARGO_PKG_VERSION"), true);
+            embed.field("Rust Version", cargo_version, true);
+            embed.field("Serenity Version", serenity_version, true);
+            embed.field("Uptime", uptime, true);
+            embed.field("Guild Count", ctx.discord().cache.guild_count(), true);
+            embed.field(
                 "Owner",
                 format!("<@{}>", &ctx.data().config.env.owner_id),
                 true,
             );
 
-            e
-        })
+            embed
+        });
+        m.components(|c| {
+            c.create_action_row(|ar| {
+                ar.create_button(|b| {
+                    b.style(ButtonStyle::Link);
+                    b.url("https://discord.com/api/oauth2/authorize?client_id=419510043801681921&permissions=8&scope=bot");
+                    b.label("Invite Me!");
+
+                    b
+                });
+                ar.create_button(|b| {
+                    b.style(ButtonStyle::Link);
+                    b.url("https://discord.gg/sQg3nJY");
+                    b.label("Support Server");
+
+                    b
+                });
+                ar
+            });
+            c
+        });
+        m
     })
     .await?;
 
