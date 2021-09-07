@@ -11,6 +11,7 @@ use serenity::{
     builder::CreateApplicationCommands, model::prelude::ApplicationId,
     prelude::Context as SerenityContext,
 };
+use std::sync::Mutex;
 use std::time::Duration;
 
 pub type Context<'a> = poise::Context<'a, State, Error>;
@@ -20,6 +21,7 @@ pub struct State {
     config: config::Config,
     hub: hub::Hub,
     start_time: DateTime<Utc>,
+    connected: Mutex<bool>,
 }
 
 impl State {
@@ -30,7 +32,15 @@ impl State {
             hub: hub::Hub::load(&config)?,
             config,
             start_time: Utc::now(),
+            connected: Mutex::new(false),
         })
+    }
+
+    pub async fn set_connected(&self) -> Result<()> {
+        let mut conn = self.connected.lock().unwrap();
+        *conn = true;
+
+        Ok(())
     }
 }
 
@@ -42,7 +52,13 @@ async fn listener(
 ) -> Result<()> {
     match event {
         poise::Event::Ready { .. } => {
-            println!("Bot is connected!");
+            if *state.connected.lock().unwrap() {
+                println!("Bot reconnected!");
+                return Ok(());
+            }
+
+            state.set_connected().await?;
+            println!("Bot connected!");
 
             state
                 .hub
