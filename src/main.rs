@@ -3,9 +3,10 @@ mod config;
 mod hub;
 mod utils;
 
+extern crate serde_json;
+
 use anyhow::{Error, Result};
 use chrono::{prelude::Utc, DateTime};
-use serde_json;
 use serenity::{
     builder::CreateApplicationCommands, model::prelude::ApplicationId,
     prelude::Context as SerenityContext,
