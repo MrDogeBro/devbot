@@ -2,6 +2,7 @@ use super::{get_category_description, utils, Context};
 use anyhow::Result;
 use chrono::prelude::Utc;
 use regex::Regex;
+use serde_json::Value as JsonValue;
 use serenity::collector::component_interaction_collector::CollectComponentInteraction;
 use serenity::model::{
     interactions::message_component::ButtonStyle, prelude::InteractionResponseType,
@@ -334,6 +335,64 @@ pub async fn help(
             break;
         }
     }
+
+    Ok(())
+}
+
+// ========================================================================================
+//                                  Source Command
+// ========================================================================================
+
+/// Shows source code for the bot
+///
+/// Shows the source code for the bot and some other information about the source code ```
+/// <<prefix>>source
+/// ```
+#[poise::command(slash_command)]
+pub async fn source(ctx: Context<'_>) -> Result<()> {
+    let code_info_raw = Command::new("scc")
+        .arg("-i")
+        .arg("rs")
+        .arg("-f")
+        .arg("json")
+        .arg("--no-complexity")
+        .arg("--no-size")
+        .arg(".")
+        .output()?;
+    let code_info: JsonValue =
+        serde_json::from_str(&String::from_utf8_lossy(&code_info_raw.stdout))?;
+
+    poise::send_reply(ctx, |m| {
+        m.embed(|embed| {
+            embed.title("Source");
+            embed.color(ctx.data().config.env.default_embed_color);
+            embed.field("Code Lines", code_info[0]["Code"].to_string(), true);
+            embed.field("Doc Lines", code_info[0]["Comment"].to_string(), true);
+            embed.field("Blank Lines", code_info[0]["Blank"].to_string(), true);
+            embed.field(
+                "License",
+                "[GNU GPL v3](https://github.com/MrDogeBro/devbot/blob/HEAD/LICENSE)",
+                false,
+            );
+
+            embed
+        });
+        m.components(|c| {
+            c.create_action_row(|ar| {
+                ar.create_button(|b| {
+                    b.style(ButtonStyle::Link);
+                    b.url("https://github.com/MrDogeBro/devbot");
+                    b.label("View on GitHub");
+
+                    b
+                });
+                ar
+            });
+            c
+        });
+        m
+    })
+    .await?;
 
     Ok(())
 }

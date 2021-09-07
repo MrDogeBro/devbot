@@ -9,6 +9,7 @@ pub fn command_list(
 ) -> Result<poise::FrameworkOptions<State, Error>> {
     options.command(meta::info(), |f| f.category("Meta"));
     options.command(meta::help(), |f| f.category("Meta"));
+    options.command(meta::source(), |f| f.category("Meta"));
 
     Ok(options)
 }
