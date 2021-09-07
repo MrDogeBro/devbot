@@ -7,9 +7,9 @@ pub fn time_diff(start: DateTime<Utc>, end: DateTime<Utc>) -> Result<String> {
 
     let weeks = duration.num_weeks();
     let days = duration.num_days() - (weeks * 7);
-    let hours = duration.num_hours() - (days * 24);
-    let mins = duration.num_minutes() - (hours * 60);
-    let seconds = duration.num_seconds() - (mins * 60);
+    let hours = duration.num_hours() - (duration.num_days() * 24);
+    let mins = duration.num_minutes() - (duration.num_hours() * 60);
+    let seconds = duration.num_seconds() - (duration.num_minutes() * 60);
 
     if weeks > 0 {
         diff.push(format!("{}w", weeks));
