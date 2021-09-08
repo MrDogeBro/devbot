@@ -47,7 +47,7 @@ impl Env {
             prefix: var("PREFIX")?,
             default_embed_color: serenity::utils::Colour::from_rgb(
                 *default_embed_color.get(0).unwrap(),
-                *default_embed_color.get(2).unwrap(),
+                *default_embed_color.get(1).unwrap(),
                 *default_embed_color.get(2).unwrap(),
             ),
             default_interaction_timeout: Duration::from_secs(
