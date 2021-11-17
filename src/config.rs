@@ -2,10 +2,12 @@ use anyhow::Result;
 use dotenv::dotenv;
 use std::env::var;
 use std::time::Duration;
+use std::{fs, path::Path};
 
 #[derive(Clone)]
 pub struct Config {
     pub env: Env,
+    pub data_path: DataPath,
 }
 
 #[derive(Clone)]
@@ -20,9 +22,26 @@ pub struct Env {
     pub hub_stdout_id: u64,
 }
 
+#[derive(Clone)]
+pub struct DataPath {
+    pub dynamic: String,
+}
+
 impl Config {
     pub fn load() -> Result<Self> {
-        Ok(Self { env: Env::load()? })
+        let base_data_path = "data";
+        let data_path = DataPath {
+            dynamic: format!("{}/dynamic", base_data_path),
+        };
+
+        if !Path::new(&data_path.dynamic).exists() {
+            fs::create_dir_all(&data_path.dynamic)?;
+        }
+
+        Ok(Self {
+            env: Env::load()?,
+            data_path,
+        })
     }
 }
 
