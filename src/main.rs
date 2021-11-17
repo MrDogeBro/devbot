@@ -1,5 +1,6 @@
 mod commands;
 mod config;
+mod db;
 mod hub;
 mod utils;
 
@@ -22,6 +23,7 @@ pub struct State {
     hub: hub::Hub,
     start_time: DateTime<Utc>,
     connected: Mutex<bool>,
+    db: Mutex<db::Database>,
 }
 
 impl State {
@@ -30,9 +32,10 @@ impl State {
 
         Ok(Self {
             hub: hub::Hub::load(&config)?,
-            config,
             start_time: Utc::now(),
             connected: Mutex::new(false),
+            db: Mutex::new(db::Database::load(&config.data_path.dynamic)?),
+            config,
         })
     }
 
