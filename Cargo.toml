@@ -26,3 +26,7 @@ branch = "next"
 [dependencies.uuid]
 version = "0.8"
 features = ["v4"]
+
+[dependencies.phf]
+version = "0.10"
+features = ["macros"]
