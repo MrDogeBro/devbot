@@ -1,10 +1,12 @@
 mod commands;
 mod config;
 mod db;
-mod hub;
+mod extensions;
 mod utils;
 
 extern crate serde_json;
+
+use extensions::hub;
 
 use anyhow::{Error, Result};
 use chrono::{prelude::Utc, DateTime};
@@ -133,9 +135,26 @@ async fn listener(
 async fn on_error(error: Error, ctx: poise::ErrorContext<'_, State, Error>) {
     match ctx {
         poise::ErrorContext::Setup => panic!("Failed to start bot: {:?}", error),
-        poise::ErrorContext::Command(ctx) => {
-            println!("Error in command `{}`: {:?}", ctx.command().name(), error)
-        }
+        poise::ErrorContext::Command(ctx) => match extensions::error::handle_error(error).await {
+            Ok(msg) => match poise::send_reply(ctx.ctx(), |m| m.content(msg.to_string())).await {
+                Ok(_) => (),
+                Err(e) => println!("Failed to send error message {}.\n\nTraceback:\n{}", msg, e),
+            },
+            Err(e) => {
+                println!("Error in command `{}`: {:#?}", ctx.command().name(), e);
+
+                match poise::send_reply(ctx.ctx(), |m| {
+                    m.content("Something went wrong. Please notifty MrDogeBro.".to_string())
+                })
+                .await
+                {
+                    Ok(_) => (),
+                    Err(e) => {
+                        println!("Failed to send unknown error message.\n\nTraceback:\n{}", e)
+                    }
+                };
+            }
+        },
         _ => println!("Other error: {:?}", error),
     }
 }
