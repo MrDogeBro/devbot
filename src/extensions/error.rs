@@ -19,7 +19,3 @@ pub async fn handle_error(err: Error) -> Result<String> {
 
     Err(err)
 }
-
-pub fn perms_error(perm: Permissions) -> Result<()> {
-    return Err(Error::msg(perm.to_string().to_lowercase()).context(PERMS_ERROR));
-}
