@@ -27,6 +27,7 @@ pub async fn kick(
             .unwrap()
             .member(&ctx.discord().http, ctx.author().id)
             .await?,
+        ctx.discord(),
     )
     .await?;
 
