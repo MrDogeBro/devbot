@@ -1,3 +1,4 @@
+use crate::extensions::logging;
 use crate::utils::checks;
 use crate::Context;
 
@@ -46,8 +47,79 @@ pub async fn kick(
         member.kick(&ctx.discord().http).await?;
     }
 
+    logging::log(
+        ctx.guild().unwrap().id,
+        format!("Successfully kicked {}.", member),
+    )
+    .await?;
+
     poise::send_reply(ctx, |m| {
         m.content(format!("Successfully kicked {}.", member))
+    })
+    .await?;
+
+    Ok(())
+}
+
+// ========================================================================================
+//                                  Ban Command
+// ========================================================================================
+
+/// Bans a member
+///
+/// Bans a member from the server, with an optional reason. ```
+/// <<prefix>>ban <member> [days] [reason]
+/// ```
+#[poise::command(slash_command)]
+pub async fn ban(
+    ctx: Context<'_>,
+    #[description = "The member who will be banned"] member: Member,
+    #[description = "The number of days worth of messages to delete"] days: Option<u8>,
+    #[description = "The reason the member is being banned"]
+    #[rest]
+    reason: Option<String>,
+) -> Result<()> {
+    checks::check_permission(
+        Permissions::BAN_MEMBERS,
+        ctx.guild()
+            .unwrap()
+            .member(
+                &ctx.discord().http,
+                UserId(*ctx.framework().application_id().as_u64()),
+            )
+            .await?,
+        ctx.guild()
+            .unwrap()
+            .member(&ctx.discord().http, ctx.author().id)
+            .await?,
+        ctx.discord(),
+    )
+    .await?;
+
+    let mut new_days: u8 = 7;
+
+    if let Some(days) = days {
+        if days <= 7 {
+            new_days = days;
+        }
+    }
+
+    if let Some(reason) = reason {
+        member
+            .ban_with_reason(&ctx.discord().http, new_days, &reason)
+            .await?;
+    } else {
+        member.ban(&ctx.discord().http, new_days).await?;
+    }
+
+    logging::log(
+        ctx.guild().unwrap().id,
+        format!("Successfully banned {}.", member),
+    )
+    .await?;
+
+    poise::send_reply(ctx, |m| {
+        m.content(format!("Successfully banned {}.", member))
     })
     .await?;
 

@@ -13,7 +13,7 @@ pub fn command_list(
     options.command(meta::source(), |f| f.category("Meta"));
 
     options.command(moderator::kick(), |f| f.category("Moderator"));
-    // options.command(moderator::ban(), |f| f.category("Moderator"));
+    options.command(moderator::ban(), |f| f.category("Moderator"));
 
     Ok(options)
 }
