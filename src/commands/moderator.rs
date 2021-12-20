@@ -1,5 +1,5 @@
-use super::Context;
 use crate::utils::checks;
+use crate::Context;
 
 use anyhow::Result;
 use serenity::model::{guild::Member, permissions::Permissions};
