@@ -3,7 +3,7 @@ use crate::utils::checks;
 use crate::Context;
 
 use anyhow::Result;
-use serenity::model::{guild::Member, id::UserId, permissions::Permissions};
+use serenity::model::{guild::Member, id::UserId, permissions::Permissions, user::User};
 
 // ========================================================================================
 //                                  Kick Command
@@ -120,6 +120,74 @@ pub async fn ban(
 
     poise::send_reply(ctx, |m| {
         m.content(format!("Successfully banned {}.", member))
+    })
+    .await?;
+
+    Ok(())
+}
+
+// ========================================================================================
+//                                  Unban Command
+// ========================================================================================
+
+/// Unbans a member
+///
+/// Unbans a member from the server, with an optional reason. ```
+/// <<prefix>>unban <member> [reason]
+/// ```
+#[poise::command(slash_command)]
+pub async fn unban(
+    ctx: Context<'_>,
+    #[description = "The id of the user who will be unbanned"] id: UserId,
+    #[description = "The reason the user is being unbanned"]
+    #[rest]
+    reason: Option<String>,
+) -> Result<()> {
+    checks::check_permission(
+        Permissions::BAN_MEMBERS,
+        ctx.guild()
+            .unwrap()
+            .member(
+                &ctx.discord().http,
+                UserId(*ctx.framework().application_id().as_u64()),
+            )
+            .await?,
+        ctx.guild()
+            .unwrap()
+            .member(&ctx.discord().http, ctx.author().id)
+            .await?,
+        ctx.discord(),
+    )
+    .await?;
+
+    let user: User = id.to_user(&ctx.discord().http).await?;
+
+    if !ctx
+        .guild()
+        .unwrap()
+        .bans(&ctx.discord().http)
+        .await?
+        .iter()
+        .any(|b| b.user == user)
+    {
+        poise::send_reply(ctx, |m| {
+            m.content(format!("User {} was never banned.", user))
+        })
+        .await?;
+
+        return Ok(());
+    }
+
+    ctx.guild().unwrap().unban(&ctx.discord().http, id).await?;
+
+    logging::log(
+        ctx.guild().unwrap().id,
+        format!("Successfully unbanned {}.", user),
+    )
+    .await?;
+
+    poise::send_reply(ctx, |m| {
+        m.content(format!("Successfully unbanned {}.", user))
     })
     .await?;
 

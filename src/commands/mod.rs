@@ -10,7 +10,7 @@ pub fn command_list(
     mut options: poise::FrameworkOptions<State, Error>,
 ) -> Result<poise::FrameworkOptions<State, Error>> {
     register_commands!(options, meta, "Meta", info, help, source);
-    register_commands!(options, moderator, "Moderator", kick, ban);
+    register_commands!(options, moderator, "Moderator", kick, ban, unban);
 
     Ok(options)
 }
