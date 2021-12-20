@@ -1,6 +1,7 @@
 mod meta;
 mod moderator;
 
+use crate::register_commands;
 use crate::State;
 
 use anyhow::{Error, Result};
@@ -8,12 +9,8 @@ use anyhow::{Error, Result};
 pub fn command_list(
     mut options: poise::FrameworkOptions<State, Error>,
 ) -> Result<poise::FrameworkOptions<State, Error>> {
-    options.command(meta::info(), |f| f.category("Meta"));
-    options.command(meta::help(), |f| f.category("Meta"));
-    options.command(meta::source(), |f| f.category("Meta"));
-
-    options.command(moderator::kick(), |f| f.category("Moderator"));
-    options.command(moderator::ban(), |f| f.category("Moderator"));
+    register_commands!(options, meta, "Meta", info, help, source);
+    register_commands!(options, moderator, "Moderator", kick, ban);
 
     Ok(options)
 }

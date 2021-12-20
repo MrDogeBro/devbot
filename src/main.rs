@@ -2,6 +2,7 @@ mod commands;
 mod config;
 mod db;
 mod extensions;
+mod macros;
 mod utils;
 
 extern crate serde_json;
