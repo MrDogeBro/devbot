@@ -2,9 +2,11 @@ use anyhow::{Error, Result};
 use phf::{phf_map, Map};
 
 pub const PERMS_ERROR: &str = "PERMS_ERROR";
+pub const BOT_PERMS_ERROR: &str = "BOT_PERMS_ERROR";
 
 pub static ERRORS: Map<&'static str, &'static str> = phf_map! {
     "PERMS_ERROR" => "You do not have the {} permission required to use this command!",
+    "BOT_PERMS_ERROR" => "The bot does not have the {} permission required to execute this command!",
 };
 
 pub async fn handle_error(err: Error) -> Result<String> {
