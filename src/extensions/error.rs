@@ -1,6 +1,5 @@
 use anyhow::{Error, Result};
 use phf::{phf_map, Map};
-use serenity::model::permissions::Permissions;
 
 pub const PERMS_ERROR: &str = "PERMS_ERROR";
 
