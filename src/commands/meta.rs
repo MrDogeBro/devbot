@@ -24,7 +24,7 @@ use uuid::Uuid;
 /// Shows information about the bot, inviting it, etc. ```
 /// <<prefix>>info
 /// ```
-#[poise::command(slash_command)]
+#[poise::command(slash_command, category = "Meta")]
 pub async fn info(ctx: Context<'_>) -> Result<()> {
     let cargo_file = fs::read_to_string("Cargo.toml")?.parse::<Value>()?;
     let serenity_depend = &cargo_file["dependencies"]["serenity"].as_table().unwrap();
@@ -105,22 +105,22 @@ pub async fn info(ctx: Context<'_>) -> Result<()> {
 /// Shows the commands the bot has. Optionally, to get detailed information about a specific command, use the following syntax. ```
 /// <<prefix>>help [command|module]
 /// ```
-#[poise::command(slash_command)]
+#[poise::command(slash_command, category = "Meta")]
 pub async fn help(
     ctx: Context<'_>,
     #[description = "The category or command you want help on"] query: Option<String>,
 ) -> Result<()> {
     let uuid_categories = Uuid::new_v4();
-    let mut categories: Vec<(Option<&str>, Vec<&poise::PrefixCommand<_, _>>)> = Vec::new();
+    let mut categories: Vec<(Option<&str>, Vec<poise::CommandDefinitionRef<_, _>>)> = Vec::new();
 
-    for cmd_meta in &ctx.framework().options().prefix_options.commands {
+    for cmd in ctx.framework().commands() {
         if let Some((_, commands)) = categories
             .iter_mut()
-            .find(|(key, _)| *key == cmd_meta.category)
+            .find(|(key, _)| *key == cmd.id.category)
         {
-            commands.push(&cmd_meta.command);
+            commands.push(cmd);
         } else {
-            categories.push((cmd_meta.category, vec![&cmd_meta.command]));
+            categories.push((cmd.id.category, vec![cmd]));
         }
     }
 
@@ -136,15 +136,15 @@ pub async fn help(
 
             if query.to_lowercase() == category.to_lowercase() {
                 for command in commands {
-                    if command.options.hide_in_help {
+                    if command.id.hide_in_help {
                         continue;
                     }
 
                     cmds += format!(
                         "`{}{}` {}\n",
                         prefix,
-                        command.name,
-                        command.options.inline_help.unwrap_or("")
+                        command.slash.unwrap().name(),
+                        command.id.inline_help.unwrap_or("")
                     )
                     .as_str();
                 }
@@ -165,17 +165,19 @@ pub async fn help(
                 return Ok(());
             }
             for command in commands {
-                if query.to_lowercase() == command.name.to_lowercase() {
-                    if command.options.hide_in_help {
+                if query.to_lowercase() == command.slash.unwrap().name().to_lowercase() {
+                    if command.id.hide_in_help {
                         continue;
                     }
 
-                    let name: String = utils::string::into_titlecase(&mut command.name.to_owned())?;
+                    let name: String = utils::string::into_titlecase(
+                        &mut command.slash.unwrap().name().to_owned(),
+                    )?;
                     let description: String =
-                        if let Some(multiline_help) = command.options.multiline_help {
+                        if let Some(multiline_help) = command.id.multiline_help {
                             multiline_help()
                         } else {
-                            command.options.inline_help.unwrap_or("").to_string()
+                            command.id.inline_help.unwrap_or("").to_string()
                         };
 
                     poise::send_reply(ctx, |m| {
@@ -232,6 +234,7 @@ pub async fn help(
         m
     })
     .await?
+    .unwrap()
     .message()
     .await?;
 
@@ -248,7 +251,7 @@ pub async fn help(
             .await;
 
         if let Some(mci) = mci {
-            let mut msg = mci.message.clone().regular().unwrap();
+            let mut msg = mci.message.clone();
 
             if mci.data.values.is_empty() {
                 mci.create_interaction_response(ctx.discord(), |ir| {
@@ -264,15 +267,15 @@ pub async fn help(
                     let mut cmds: String = "".to_string();
 
                     for command in commands {
-                        if command.options.hide_in_help {
+                        if command.id.hide_in_help {
                             continue;
                         }
 
                         cmds += format!(
                             "`{}{}` {}\n",
                             prefix,
-                            command.name,
-                            command.options.inline_help.unwrap_or("")
+                            command.slash.unwrap().name(),
+                            command.id.inline_help.unwrap_or("")
                         )
                         .as_str();
                     }
@@ -351,7 +354,7 @@ pub async fn help(
 /// Shows the source code for the bot and some other information about the source code ```
 /// <<prefix>>source
 /// ```
-#[poise::command(slash_command)]
+#[poise::command(slash_command, category = "Meta")]
 pub async fn source(ctx: Context<'_>) -> Result<()> {
     let code_info_raw = Command::new("scc")
         .arg("-i")

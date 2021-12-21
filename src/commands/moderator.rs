@@ -14,7 +14,7 @@ use serenity::model::{guild::Member, id::UserId, permissions::Permissions, user:
 /// Kicks a member from the server, with an optional reason. ```
 /// <<prefix>>kick <member> [reason]
 /// ```
-#[poise::command(slash_command)]
+#[poise::command(slash_command, category = "Moderator")]
 pub async fn kick(
     ctx: Context<'_>,
     #[description = "The member who will be kicked"] member: Member,
@@ -135,7 +135,7 @@ pub async fn ban(
 /// Unbans a member from the server, with an optional reason. ```
 /// <<prefix>>unban <member> [reason]
 /// ```
-#[poise::command(slash_command)]
+#[poise::command(slash_command, category = "Moderator")]
 pub async fn unban(
     ctx: Context<'_>,
     #[description = "The id of the user who will be unbanned"] id: UserId,
