@@ -15,6 +15,11 @@ pub struct Env {
     pub token: String,
     pub owner_id: String,
     pub application_id: u64,
+    pub db_host: String,
+    pub db_port: u16,
+    pub db_name: String,
+    pub db_user: String,
+    pub db_pass: String,
     pub prefix: String,
     pub default_embed_color: serenity::utils::Colour,
     pub default_interaction_timeout: Duration,
@@ -25,13 +30,15 @@ pub struct Env {
 #[derive(Clone)]
 pub struct DataPath {
     pub dynamic: String,
+    pub staticd: String,
 }
 
 impl Config {
-    pub fn load() -> Result<Self> {
+    pub async fn load() -> Result<Self> {
         let base_data_path = "data";
         let data_path = DataPath {
             dynamic: format!("{}/dynamic", base_data_path),
+            staticd: format!("{}/static", base_data_path),
         };
 
         if !Path::new(&data_path.dynamic).exists() {
@@ -39,14 +46,14 @@ impl Config {
         }
 
         Ok(Self {
-            env: Env::load()?,
+            env: Env::load().await?,
             data_path,
         })
     }
 }
 
 impl Env {
-    pub fn load() -> Result<Self> {
+    pub async fn load() -> Result<Self> {
         dotenv().ok();
 
         let default_embed_color: Vec<u8> = var("DEFAULT_EMBED_COLOR")?
@@ -63,6 +70,11 @@ impl Env {
             token: var("TOKEN")?,
             owner_id: var("OWNER_ID")?,
             application_id: var("APPLICATION_ID")?.parse()?,
+            db_host: var("DB_HOST")?,
+            db_port: var("DB_PORT")?.parse()?,
+            db_name: var("DB_NAME")?,
+            db_user: var("DB_USER")?,
+            db_pass: var("DB_PASS")?,
             prefix: var("PREFIX")?,
             default_embed_color: serenity::utils::Colour::from_rgb(
                 *default_embed_color.get(0).unwrap(),
