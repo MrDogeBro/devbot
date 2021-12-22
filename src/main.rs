@@ -2,6 +2,7 @@ mod commands;
 mod config;
 mod db;
 mod extensions;
+mod framework;
 mod macros;
 mod utils;
 
@@ -11,10 +12,7 @@ use extensions::hub;
 
 use anyhow::{Error, Result};
 use chrono::{prelude::Utc, DateTime};
-use serenity::{
-    builder::CreateApplicationCommands, model::prelude::ApplicationId,
-    prelude::Context as SerenityContext,
-};
+use serenity::{model::prelude::ApplicationId, prelude::Context as SerenityContext};
 use std::sync::Mutex;
 use std::time::Duration;
 
@@ -74,58 +72,7 @@ async fn listener(
                 })
                 .await?;
 
-            if cfg!(debug_assertions) {
-                // register only for test guild in develop
-                let commands = ctx
-                    .http
-                    .get_guild_application_commands(state.config.env.hub_server_id)
-                    .await?;
-
-                for cmd in commands {
-                    ctx.http
-                        .delete_guild_application_command(state.config.env.hub_server_id, cmd.id.0)
-                        .await?;
-                }
-
-                println!("Commands unregistered (develop)");
-
-                let mut commands_builder = CreateApplicationCommands::default();
-                let commands = &framework.options().slash_options.commands;
-
-                for cmd in commands {
-                    commands_builder.create_application_command(|f| cmd.create(f));
-                }
-
-                let json_value = serde_json::Value::Array(commands_builder.0);
-                ctx.http
-                    .create_guild_application_commands(state.config.env.hub_server_id, &json_value)
-                    .await?;
-
-                println!("Commands registered (develop)");
-            } else {
-                // register globally in prod
-                let commands = ctx.http.get_global_application_commands().await?;
-
-                for cmd in commands {
-                    ctx.http.delete_global_application_command(cmd.id.0).await?;
-                }
-
-                println!("Commands unregistered");
-
-                let mut commands_builder = CreateApplicationCommands::default();
-                let commands = &framework.options().slash_options.commands;
-
-                for cmd in commands {
-                    commands_builder.create_application_command(|f| cmd.create(f));
-                }
-
-                let json_value = serde_json::Value::Array(commands_builder.0);
-                ctx.http
-                    .create_global_application_commands(&json_value)
-                    .await?;
-
-                println!("Commands registered");
-            }
+            framework::register_commands(ctx, framework, state).await?;
 
             Ok(())
         }
@@ -180,14 +127,14 @@ async fn main() -> Result<()> {
     let env = config::Env::load()?;
 
     let framework = poise::Framework::new(
-        env.prefix.to_owned(),
         ApplicationId(env.application_id),
+        serenity::client::ClientBuilder::new(env.token),
         |_, _, _| Box::pin(State::load()),
         init_framework()?,
-    );
-    framework
-        .start(serenity::client::ClientBuilder::new(env.token))
-        .await?;
+    )
+    .await?;
+
+    framework.start().await?;
 
     Ok(())
 }
