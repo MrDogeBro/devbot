@@ -1,0 +1,3 @@
+CREATE TABLE IF NOT EXISTS config (
+    id integer NOT NULL PRIMARY KEY
+);
