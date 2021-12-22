@@ -19,8 +19,9 @@ macro_rules! register_commands_group {
             use $mdl as module;
             $fwk.command(module::$base_cmd(), |f| {
                 $(
-                    f.subcommand(module::$cmd(), |f| f)
+                    f.subcommand(module::$cmd(), |f| f);
                 )+
+                f
             });
         }
     };
