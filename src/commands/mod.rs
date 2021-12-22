@@ -12,8 +12,7 @@ pub fn command_list(
 ) -> Result<poise::FrameworkOptions<State, Error>> {
     register_commands!(options, meta, info, help, source);
     register_commands!(options, moderator, kick, ban, unban);
-    // register_commands_group!(options, config, "Config", config, test);
-    options.command(config::config(), |f| f.subcommand(config::test(), |f| f));
+    register_commands_group!(options, config, config, logging);
 
     Ok(options)
 }
