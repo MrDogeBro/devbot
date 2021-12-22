@@ -24,7 +24,7 @@ pub struct State {
     hub: hub::Hub,
     start_time: DateTime<Utc>,
     connected: Mutex<bool>,
-    db: Mutex<db::Database>,
+    db: db::Database,
 }
 
 impl State {
@@ -35,7 +35,7 @@ impl State {
             hub: hub::Hub::load(&config).await?,
             start_time: Utc::now(),
             connected: Mutex::new(false),
-            db: Mutex::new(db::Database::load(&config).await?),
+            db: db::Database::load(&config).await?,
             config,
         })
     }
