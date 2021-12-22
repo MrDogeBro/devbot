@@ -1,3 +1,5 @@
 CREATE TABLE IF NOT EXISTS config (
-    id integer NOT NULL PRIMARY KEY
+    id bigint NOT NULL PRIMARY KEY,
+    logging boolean NOT NULL DEFAULT false,
+    log_channel_id bigint
 );
