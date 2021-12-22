@@ -29,13 +29,13 @@ pub struct State {
 
 impl State {
     pub async fn load() -> Result<Self> {
-        let config = config::Config::load()?;
+        let config = config::Config::load().await?;
 
         Ok(Self {
-            hub: hub::Hub::load(&config)?,
+            hub: hub::Hub::load(&config).await?,
             start_time: Utc::now(),
             connected: Mutex::new(false),
-            db: Mutex::new(db::Database::load(&config.data_path.dynamic)?),
+            db: Mutex::new(db::Database::load(&config).await?),
             config,
         })
     }
@@ -124,7 +124,7 @@ fn init_framework() -> Result<poise::FrameworkOptions<State, Error>> {
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let env = config::Env::load()?;
+    let env = config::Env::load().await?;
 
     let framework = poise::Framework::new(
         ApplicationId(env.application_id),

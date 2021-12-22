@@ -6,7 +6,7 @@ pub struct Hub {
 }
 
 impl Hub {
-    pub fn load(config: &crate::config::Config) -> Result<Self> {
+    pub async fn load(config: &crate::config::Config) -> Result<Self> {
         Ok(Self {
             stdout: ChannelId(config.env.hub_stdout_id),
         })
