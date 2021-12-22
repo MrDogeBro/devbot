@@ -70,7 +70,7 @@ pub async fn kick(
 /// Bans a member from the server, with an optional reason. ```
 /// <<prefix>>ban <member> [days] [reason]
 /// ```
-#[poise::command(slash_command)]
+#[poise::command(slash_command, category = "Moderator")]
 pub async fn ban(
     ctx: Context<'_>,
     #[description = "The member who will be banned"] member: Member,
