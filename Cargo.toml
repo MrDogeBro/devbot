@@ -5,14 +5,13 @@ authors = ["MrDogeBro <MrDogeBro@users.noreply.github.com>"]
 edition = "2018"
 
 [dependencies]
-tokio = { version = "1", features = ["full"] }
 anyhow = "1.0"
 serde_json = "1"
-dotenv = "0.15.0"
-chrono = "0.4.19"
+dotenv = "0.15"
+chrono = "0.4"
 toml = "0.5"
 regex = "1"
-rusqlite = "0.25.3"
+tokio-postgres = "0.7"
 
 [dependencies.poise]
 git = "https://github.com/kangalioo/poise"
@@ -22,6 +21,10 @@ default-features = false
 features = ["builder", "cache", "client", "gateway", "model", "utils", "rustls_backend", "unstable_discord_api", "collector"]
 git = "https://github.com/serenity-rs/serenity"
 branch = "next"
+
+[dependencies.tokio]
+version = "1"
+features = ["full"]
 
 [dependencies.uuid]
 version = "0.8"

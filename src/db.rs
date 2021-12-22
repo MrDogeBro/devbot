@@ -1,21 +1,41 @@
 use anyhow::Result;
-use rusqlite::Connection;
+use tokio::{fs::File, io::AsyncReadExt};
+use tokio_postgres::{connect, Client, NoTls};
 
 pub struct Database {
-    pub conn: Connection,
+    pub client: Client,
 }
 
 impl Database {
-    pub fn load(dynamic_data_path: &String) -> Result<Self> {
-        let conn = Connection::open(format!("{}/db.db", dynamic_data_path))?;
+    pub async fn load(config: &crate::config::Config) -> Result<Self> {
+        let (client, conn) = connect(
+            format!(
+                "host={} port={} dbname={} user={} password={}",
+                config.env.db_host,
+                config.env.db_port,
+                config.env.db_name,
+                config.env.db_user,
+                config.env.db_pass
+            )
+            .as_str(),
+            NoTls,
+        )
+        .await?;
 
-        conn.execute(
-            "CREATE TABLE IF NOT EXISTS prefs (
-                id integer NOT NULL PRIMARY KEY
-            )",
-            [],
-        )?;
+        tokio::spawn(async move {
+            if let Err(e) = conn.await {
+                eprintln!("Error connecting to db: {}", e);
+            }
+        });
 
-        Ok(Self { conn })
+        let mut build_sql: String = String::new();
+        File::open(format!("{}/build.sql", &config.data_path.staticd))
+            .await?
+            .read_to_string(&mut build_sql)
+            .await?;
+
+        client.batch_execute(build_sql.as_str()).await?;
+
+        Ok(Self { client })
     }
 }
